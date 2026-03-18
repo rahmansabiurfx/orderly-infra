@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────
+# Terraform
+# ─────────────────────────────────────────────────
+
+# State files — contain sensitive data (passwords, IPs, ARNs)
+# and should NEVER be in Git. We use remote state (S3) instead.
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Provider plugins — large binary files downloaded by 'terraform init'.
+# Each developer downloads their own. No need to store in Git.
+.terraform/
+
+# Lock file — records exact provider versions.
+# Some teams commit this for consistency. We exclude it for simplicity.
+.terraform.lock.hcl
+
+# Crash logs — generated when Terraform crashes (rare)
+crash.log
+crash.*.log
+
+# Override files — used for local-only overrides during development
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Variable values files — may contain sensitive values like passwords.
+# We commit example.tfvars (with placeholder values) instead.
+*.tfvars
+!example.tfvars
+
+# Plan output files (binary, can contain secrets)
+*.tfplan
+
+# ─────────────────────────────────────────────────
+# Operating System
+# ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────────────
+# IDE / Editor
+# ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─────────────────────────────────────────────────
+# Secrets — NEVER commit these
+# ─────────────────────────────────────────────────
+.env
+*.pem
+*.key
+*.secret
+
+# ─────────────────────────────────────────────────
+# Temporary files
+# ─────────────────────────────────────────────────
+tmp/
+temp/
