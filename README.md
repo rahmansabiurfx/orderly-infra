@@ -13,7 +13,7 @@ provisioned entirely through Terraform.
 
 
 ## Project Structure
-
+```
 ├── modules/ # Reusable Terraform modules
 │ ├── networking/ # VPC, subnets, gateways, route tables
 │ ├── security/ # Security groups with tier chaining
@@ -23,7 +23,7 @@ provisioned entirely through Terraform.
 │ ├── dev/ # Development (small, cost-optimized)
 │ └── prod/ # Production (HA, multi-AZ)
 └── remote-state/ # Terraform state backend (S3 + DynamoDB)
-
+```
 
 ## Prerequisites
 
