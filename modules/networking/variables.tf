@@ -77,7 +77,7 @@ variable "database_subnet_cidrs" {
 # ─────────────────────────────────────────────────────────────
 
 variable "enable_nat_gateway" {
-  description = "Whether to create a NAT Gateway. Costs ~\$32/month. Disable to save money when app servers don't need outbound internet."
+  description = "Whether to create a NAT Gateway. Costs ~$32/month. Disable to save money when app servers don't need outbound internet."
   type        = bool
   default     = true
 }
