@@ -182,7 +182,7 @@ resource "aws_security_group_rule" "app_egress_dns_udp" {
 
 resource "aws_security_group" "db" {
   name        = "${local.name_prefix}-db-sg"
-  description = "Controls traffic to/from the RDS database — app servers only"
+  description = "Controls traffic to/from the RDS database - app servers only"
   vpc_id      = var.vpc_id
 
   tags = merge(local.common_tags, {
