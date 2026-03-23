@@ -239,7 +239,7 @@ environments/dev/main.tf (or prod)
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/project-1-aws-infrastructure.git
+git clone https://github.com/rahmansabiurfx/project-1-aws-infrastructure.git
 cd project-1-aws-infrastructure
 ```
 
