@@ -47,6 +47,19 @@ Designed to demonstrate real-world infrastructure engineering — modular design
                     │     └──────────┴──────────┘     │
                     └─────────────────────────────────┘
 ```
+### [👤]🔑 Credentials Management
+```
+Terraform → random_password (32 chars, cryptographically secure)
+
+→ AWS Secrets Manager (encrypted at rest with KMS)
+
+→ RDS instance (password set during creation)
+
+→ EC2 IAM policy (least-privilege read access to secret)
+
+Applications retrieve database credentials at runtime via the AWS SDK,
+never from environment variables or configuration files.
+```
 
 ### 🌐 Network Design
 
@@ -208,6 +221,7 @@ environments/dev/main.tf (or prod)
 | **Application** | Python Flask (simple API for infrastructure validation) |
 | **State Management** | S3 (encrypted, versioned) + DynamoDB (locking) |
 | **Version Control** | Git + GitHub |
+| **Secrets Management** | AWS Secrets Manager (auto-generated credentials, KMS encryption) |
 
 ---
 
@@ -383,6 +397,20 @@ Security groups are stateful — response traffic to allowed inbound connections
 
 </details>
 
+### Why AWS Secrets Manager Instead of Hardcoded Passwords?
+
+Database credentials follow a secure lifecycle:
+
+1. **Generation**: Terraform's `random_password` generates a 32-character cryptographically secure password with mixed case, numbers, and special characters
+2. **Storage**: The password is stored in AWS Secrets Manager, encrypted at rest using AWS KMS, never written to disk or Git
+3. **Access**: EC2 instances have an IAM policy granting `secretsmanager:GetSecretValue` for only the specific secret ARN (least privilege)
+4. **Format**: The secret contains complete connection information (username, password, host, port, dbname, connection string) following the [AWS RDS secret JSON structure](https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_secret_json_structure.html)
+
+This eliminates:
+- Plaintext passwords in `terraform.tfvars` files
+- Passwords in shell history (`-var="db_password=..."`)
+- Risk of accidentally committing credentials to Git
+- Need for manual password management
 ---
 
 ## 💰 Cost Estimate
@@ -460,7 +488,7 @@ aws elbv2 describe-target-health \
 ## 🔮 Future Improvements
 
 - [ ] Add HTTPS listener with ACM certificate on the ALB
-- [ ] Integrate AWS Secrets Manager for database credentials
+- [ ] ~~Integrate AWS Secrets Manager for database credentials~~ ✅ 
 - [ ] Add CloudWatch alarms for ASG, ALB 5xx rates, and RDS metrics
 - [ ] Implement VPC Flow Logs for network traffic auditing
 - [ ] Add a bastion host or SSM-only access for database administration
