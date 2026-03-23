@@ -1,7 +1,7 @@
 # modules/database/outputs.tf
 # ─────────────────────────────────────────────────────────────
-# Database connection information for the application.
-
+# Database connection information and Secrets Manager references.
+# ─────────────────────────────────────────────────────────────
 
 output "db_endpoint" {
   description = "Connection endpoint (hostname:port) for the database"
@@ -31,4 +31,16 @@ output "db_instance_id" {
 output "db_arn" {
   description = "ARN of the RDS instance"
   value       = aws_db_instance.main.arn
+}
+
+# ─── Secrets Manager Outputs ──────────────────────────────
+
+output "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing DB credentials. Applications use this ARN to retrieve connection details at runtime."
+  value       = aws_secretsmanager_secret.db_credentials.arn
+}
+
+output "db_secret_name" {
+  description = "Name of the Secrets Manager secret"
+  value       = aws_secretsmanager_secret.db_credentials.name
 }

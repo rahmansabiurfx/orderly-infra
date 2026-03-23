@@ -1,14 +1,5 @@
-# environments/prod/main.tf
 # ─────────────────────────────────────────────────────────────
-# Production environment — high availability, resilient.
-#
-# Key differences from dev:
-#   - Dual NAT Gateways (one per AZ)
-#   - Larger instance types
-#   - ASG min=2 (always 2 instances for HA)
-#   - RDS Multi-AZ (automatic failover)
-#   - 7-day backup retention
-#   - Deletion protection enabled
+# environments/prod/main.tf
 # ─────────────────────────────────────────────────────────────
 
 terraform {
@@ -52,9 +43,6 @@ module "networking" {
   private_subnet_cidrs  = var.private_subnet_cidrs
   database_subnet_cidrs = var.database_subnet_cidrs
 
-  # PROD: Dual NAT Gateways for high availability.
-  # Each AZ has its own NAT. If one AZ fails, the other AZ's
-  # private subnets still have internet access.
   enable_nat_gateway = true
   single_nat_gateway = false
 }
@@ -100,6 +88,9 @@ module "compute" {
   cpu_target_value     = 60.0
 
   health_check_path = "/health"
+  
+  aws_region    = var.aws_region
+  db_secret_arn = module.database.db_secret_arn
 }
 
 
@@ -122,9 +113,7 @@ module "database" {
 
   db_name     = var.db_name
   db_username = var.db_username
-  db_password = var.db_password
 
-  # PROD settings: HA, full backups, protection
   multi_az                = true
   backup_retention_period = 7
   deletion_protection     = true

@@ -1,7 +1,7 @@
 # modules/compute/main.tf
 # ─────────────────────────────────────────────────────────────
-# Compute resources for the application tier
-
+# Compute resources for the application tier:
+# ─────────────────────────────────────────────────────────────
 
 locals {
   common_tags = {
@@ -15,40 +15,29 @@ locals {
 }
 
 
-
-
 # ═════════════════════════════════════════════════════════════
 # AMI DATA SOURCE
 # ═════════════════════════════════════════════════════════════
 
 data "aws_ami" "amazon_linux" {
-  # Return only the single most recent matching AMI
   most_recent = true
+  owners      = ["amazon"]
 
-  # Only consider AMIs owned by Amazon (account ID 137112412989)
-  # This prevents someone from publishing a malicious AMI with
-  # a similar name that we accidentally pick up.
-  owners = ["amazon"]
-
-  # Filter by name pattern — Amazon Linux 2023 AMIs follow this naming
   filter {
     name   = "name"
     values = ["al2023-ami-2023.*-x86_64"]
   }
 
-  # Only HVM virtualization (modern, full hardware virtualization)
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
 
-  # Only EBS-backed AMIs (standard for modern instances)
   filter {
     name   = "root-device-type"
     values = ["ebs"]
   }
 
-  # Only 64-bit architecture
   filter {
     name   = "architecture"
     values = ["x86_64"]
@@ -59,7 +48,6 @@ data "aws_ami" "amazon_linux" {
 # ═════════════════════════════════════════════════════════════
 # IAM ROLE + INSTANCE PROFILE
 # ═════════════════════════════════════════════════════════════
-
 
 resource "aws_iam_role" "app" {
   name = "${local.name_prefix}-app-role"
@@ -82,14 +70,37 @@ resource "aws_iam_role" "app" {
   })
 }
 
+# SSM access — connect to instances via Session Manager
 resource "aws_iam_role_policy_attachment" "app_ssm" {
   role       = aws_iam_role.app.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# CloudWatch access — send metrics and logs
 resource "aws_iam_role_policy_attachment" "app_cloudwatch" {
   role       = aws_iam_role.app.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# ─── Secrets Manager Access (Least Privilege) ─────────────
+
+resource "aws_iam_role_policy" "app_secrets_access" {
+
+  name = "${local.name_prefix}-secrets-access"
+  role = aws_iam_role.app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = var.db_secret_arn
+      }
+    ]
+  })
 }
 
 resource "aws_iam_instance_profile" "app" {
@@ -106,12 +117,11 @@ resource "aws_iam_instance_profile" "app" {
 # LAUNCH TEMPLATE
 # ═════════════════════════════════════════════════════════════
 
-
 resource "aws_launch_template" "app" {
   name        = "${local.name_prefix}-app-lt"
   description = "Launch template for ${local.name_prefix} application servers"
 
-  image_id = data.aws_ami.amazon_linux.id
+  image_id      = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
 
   iam_instance_profile {
@@ -124,11 +134,13 @@ resource "aws_launch_template" "app" {
     app_port     = var.app_port
     environment  = var.environment
     project_name = var.project_name
+    db_secret_arn = var.db_secret_arn
+    aws_region    = var.aws_region
   }))
 
   metadata_options {
     http_endpoint               = "enabled"
-    http_tokens                 = "required"  # Forces IMDSv2
+    http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
 
@@ -160,14 +172,13 @@ resource "aws_launch_template" "app" {
 # APPLICATION LOAD BALANCER
 # ═════════════════════════════════════════════════════════════
 
-
 resource "aws_lb" "app" {
   name               = "${local.name_prefix}-alb"
-  internal           = false  # false = internet-facing (has public IP)
-  load_balancer_type = "application"  # Layer 7 (HTTP/HTTPS)
+  internal           = false
+  load_balancer_type = "application"
   security_groups    = [var.alb_security_group_id]
+  subnets            = var.public_subnet_ids
 
-  subnets = var.public_subnet_ids
   enable_deletion_protection = false
 
   tags = merge(local.common_tags, {
@@ -175,28 +186,25 @@ resource "aws_lb" "app" {
   })
 }
 
-
 # ─── Target Group ──────────────────────────────────────────
-# Defines the pool of instances and how to health-check them.
 
 resource "aws_lb_target_group" "app" {
-  name     = "${local.name_prefix}-app-tg"
-  port     = var.app_port
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
+  name        = "${local.name_prefix}-app-tg"
+  port        = var.app_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
   target_type = "instance"
 
   health_check {
     enabled             = true
-    path                = var.health_check_path       # GET /health
-    port                = "traffic-port"               # Same port as app (8080)
+    path                = var.health_check_path
+    port                = "traffic-port"
     protocol            = "HTTP"
-    interval            = var.health_check_interval    # Check every 30 seconds
-    timeout             = var.health_check_timeout     # Wait 5 seconds for response
-    healthy_threshold   = var.healthy_threshold         # 2 successes → healthy
-    unhealthy_threshold = var.unhealthy_threshold       # 3 failures → unhealthy
-    matcher             = "200"                         # Only HTTP 200 = healthy
+    interval            = var.health_check_interval
+    timeout             = var.health_check_timeout
+    healthy_threshold   = var.healthy_threshold
+    unhealthy_threshold = var.unhealthy_threshold
+    matcher             = "200"
   }
 
   deregistration_delay = 60
@@ -233,24 +241,21 @@ resource "aws_autoscaling_group" "app" {
   min_size            = var.asg_min_size
   max_size            = var.asg_max_size
   desired_capacity    = var.asg_desired_capacity
-
   vpc_zone_identifier = var.private_subnet_ids
-
-  target_group_arns = [aws_lb_target_group.app.arn]
+  target_group_arns   = [aws_lb_target_group.app.arn]
 
   health_check_type         = "ELB"
-  health_check_grace_period = 180  # Wait 3 minutes after launch before checking
+  health_check_grace_period = 180
 
   launch_template {
     id      = aws_launch_template.app.id
-    version = "$Latest"  # Always use the latest version
+    version = "$Latest"
   }
-
 
   instance_refresh {
     strategy = "Rolling"
     preferences {
-      min_healthy_percentage = 50  # Keep at least 50% healthy during refresh
+      min_healthy_percentage = 50
     }
   }
 
@@ -294,6 +299,6 @@ resource "aws_autoscaling_policy" "cpu_target" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value = var.cpu_target_value  # 60.0
+    target_value = var.cpu_target_value
   }
 }

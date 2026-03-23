@@ -1,7 +1,9 @@
 # environments/dev/variables.tf
 # ─────────────────────────────────────────────────────────────
 # Variables for the dev environment.
-
+#
+# CHANGE: db_password removed — now auto-generated in database module
+# ─────────────────────────────────────────────────────────────
 
 # ─── General ───────────────────────────────────────────────
 
@@ -96,8 +98,3 @@ variable "db_username" {
   default     = "dbadmin"
 }
 
-variable "db_password" {
-  description = "Database master password"
-  type        = string
-  sensitive   = true
-}

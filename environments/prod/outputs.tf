@@ -39,3 +39,13 @@ output "db_hostname" {
   description = "Database hostname"
   value       = module.database.db_hostname
 }
+
+output "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing DB credentials"
+  value       = module.database.db_secret_arn
+}
+
+output "db_secret_name" {
+  description = "Name of the Secrets Manager secret"
+  value       = module.database.db_secret_name
+}

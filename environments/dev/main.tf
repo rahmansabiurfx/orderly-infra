@@ -1,7 +1,11 @@
 # environments/dev/main.tf
 # ─────────────────────────────────────────────────────────────
-# Dev environment root module.
-
+# Dev environment — wires all modules with dev-specific parameters.
+#
+# CHANGE FROM PREVIOUS VERSION:
+#   - db_password no longer passed to database module
+#   - db_secret_arn passed from database module to compute module
+# ─────────────────────────────────────────────────────────────
 
 terraform {
   required_version = ">= 1.7.0"
@@ -31,7 +35,6 @@ provider "aws" {
 # MODULE 1: NETWORKING
 # ═════════════════════════════════════════════════════════════
 
-
 module "networking" {
   source = "../../modules/networking"
 
@@ -59,11 +62,9 @@ module "security" {
 
   project_name = var.project_name
   environment  = var.environment
-
-  vpc_id = module.networking.vpc_id
-
-  app_port = 8080
-  db_port  = 5432
+  vpc_id       = module.networking.vpc_id
+  app_port     = 8080
+  db_port      = 5432
 }
 
 
@@ -77,16 +78,13 @@ module "compute" {
   project_name = var.project_name
   environment  = var.environment
 
-  # From networking module
   vpc_id             = module.networking.vpc_id
   public_subnet_ids  = module.networking.public_subnet_ids
   private_subnet_ids = module.networking.private_subnet_ids
 
-  # From security module
   alb_security_group_id = module.security.alb_security_group_id
   app_security_group_id = module.security.app_security_group_id
 
-  # Compute sizing (dev = small and cheap)
   app_port             = 8080
   instance_type        = var.instance_type
   asg_min_size         = var.asg_min_size
@@ -94,8 +92,10 @@ module "compute" {
   asg_desired_capacity = var.asg_desired_capacity
   cpu_target_value     = 60.0
 
-  # Health check settings
   health_check_path = "/health"
+  
+  aws_region    = var.aws_region
+  db_secret_arn = module.database.db_secret_arn
 }
 
 
@@ -109,22 +109,16 @@ module "database" {
   project_name = var.project_name
   environment  = var.environment
 
-  # From networking module
   db_subnet_group_name = module.networking.db_subnet_group_name
-
-  # From security module
   db_security_group_id = module.security.db_security_group_id
 
-  # Database configuration (dev = small, single-AZ, minimal backups)
   engine_version    = "15"
   instance_class    = var.db_instance_class
   allocated_storage = 20
 
   db_name     = var.db_name
   db_username = var.db_username
-  db_password = var.db_password
 
-  # Dev settings: no HA, minimal backups, easy cleanup
   multi_az                = false
   backup_retention_period = 1
   deletion_protection     = false

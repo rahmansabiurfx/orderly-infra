@@ -1,16 +1,9 @@
 # environments/dev/example.tfvars
-# ─────────────────────────────────────────────────────────────
-# Example values — to be copied to terraform.tfvars and filled 
-# in with actual values. terraform.tfvars is gitignored.
-# ─────────────────────────────────────────────────────────────
 
-
-# General
 aws_region   = "us-east-1"
 project_name = "multitier-infra"
 environment  = "dev"
 
-# Networking
 vpc_cidr           = "10.0.0.0/16"
 availability_zones = ["us-east-1a", "us-east-1b"]
 
@@ -18,14 +11,11 @@ public_subnet_cidrs   = ["10.0.1.0/24", "10.0.2.0/24"]
 private_subnet_cidrs  = ["10.0.11.0/24", "10.0.12.0/24"]
 database_subnet_cidrs = ["10.0.21.0/24", "10.0.22.0/24"]
 
-# Compute
 instance_type        = "t3.micro"
 asg_min_size         = 1
 asg_max_size         = 2
 asg_desired_capacity = 1
 
-# Database
 db_instance_class = "db.t3.micro"
 db_name           = "appdb"
 db_username       = "dbadmin"
-db_password       = "USE_ACTUAL_PASSWORD_HERE"

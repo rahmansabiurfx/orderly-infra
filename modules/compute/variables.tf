@@ -1,7 +1,8 @@
 # modules/compute/variables.tf
 # ─────────────────────────────────────────────────────────────
-# Inputs for the compute module.
-
+# CHANGE FROM PREVIOUS VERSION:
+#   - Added: db_secret_arn for Secrets Manager IAM policy
+# ─────────────────────────────────────────────────────────────
 
 # ─── Naming ────────────────────────────────────────────────
 
@@ -12,6 +13,13 @@ variable "project_name" {
 
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
+  type        = string
+}
+
+# ─── Region ────────────────────────────────────────────────
+
+variable "aws_region" {
+  description = "AWS region for deployment"
   type        = string
 }
 
@@ -42,6 +50,14 @@ variable "alb_security_group_id" {
 variable "app_security_group_id" {
   description = "Security group ID for app EC2 instances"
   type        = string
+}
+
+# ─── Secrets Manager (from database module) ────────────────
+
+variable "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing database credentials"
+  type        = string
+  default     = ""
 }
 
 # ─── Application Configuration ─────────────────────────────
@@ -81,7 +97,7 @@ variable "asg_desired_capacity" {
 }
 
 variable "cpu_target_value" {
-  description = "Target average CPU utilization (%) for auto scaling. ASG adds instances above this, removes below."
+  description = "Target average CPU utilization (%) for auto scaling"
   type        = number
   default     = 60.0
 }
@@ -101,19 +117,19 @@ variable "health_check_interval" {
 }
 
 variable "health_check_timeout" {
-  description = "Seconds to wait for a health check response before considering it failed"
+  description = "Seconds to wait for a health check response"
   type        = number
   default     = 5
 }
 
 variable "healthy_threshold" {
-  description = "Number of consecutive successful health checks before marking healthy"
+  description = "Consecutive successful checks before marking healthy"
   type        = number
   default     = 2
 }
 
 variable "unhealthy_threshold" {
-  description = "Number of consecutive failed health checks before marking unhealthy"
+  description = "Consecutive failed checks before marking unhealthy"
   type        = number
   default     = 3
 }

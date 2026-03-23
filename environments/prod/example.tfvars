@@ -1,4 +1,6 @@
 # environments/prod/example.tfvars
+# Copy to terraform.tfvars and fill in with actual values.
+# NOTE: No db_password — it is now auto-generated and stored in Secrets Manager.
 
 aws_region   = "us-east-1"
 project_name = "multitier-infra"
@@ -19,4 +21,3 @@ asg_desired_capacity = 2
 db_instance_class = "db.t3.small"
 db_name           = "appdb"
 db_username       = "dbadmin"
-db_password       = "CHANGE_ME_use_a_strong_password"
