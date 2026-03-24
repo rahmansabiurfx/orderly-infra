@@ -484,13 +484,3 @@ aws elbv2 describe-target-health \
 - **Operational practices** — Tagging strategy, IMDSv2 enforcement, deletion protection
 
 ---
-
-## 🔮 Future Improvements
-
-- [ ] Add HTTPS listener with ACM certificate on the ALB
-- [ ] ~~Integrate AWS Secrets Manager for database credentials~~ ✅ 
-- [ ] Add CloudWatch alarms for ASG, ALB 5xx rates, and RDS metrics
-- [ ] Implement VPC Flow Logs for network traffic auditing
-- [ ] Add a bastion host or SSM-only access for database administration
-- [ ] Create a CI pipeline to run `terraform validate` and `terraform plan` on PRs
-- [ ] Add `tflint` and `checkov` for static analysis and security scanning
