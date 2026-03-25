@@ -272,7 +272,7 @@ cd ../environments/dev
 
 # Create terraform.tfvars from the example and fill in values:
 cp example.tfvars terraform.tfvars
-# Edit terraform.tfvars (especially db_password)
+# Edit terraform.tfvars
 
 terraform init
 terraform plan
