@@ -123,7 +123,7 @@ Internet (0.0.0.0/0)
 ## 📁 Project Structure
 
 ```
-project-1-aws-infrastructure/
+orderly-infra/
 │
 ├── modules/                        # Reusable Terraform modules
 │   ├── networking/                 # VPC, subnets, IGW, NAT, route tables
@@ -239,8 +239,8 @@ environments/dev/main.tf (or prod)
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/rahmansabiurfx/project-1-aws-infrastructure.git
-cd project-1-aws-infrastructure
+git clone https://github.com/rahmansabiurfx/orderly-infra.git
+cd orderly-infra
 ```
 
 ### Step 2: Deploy Remote State Backend (One-Time Setup)
@@ -251,7 +251,7 @@ cd remote-state
 # Create terraform.tfvars with your values:
 cat > terraform.tfvars << 'EOF'
 aws_region          = "us-east-1"
-project_name        = "multitier-infra"
+project_name        = "orderly-infra"
 state_bucket_name   = "YOUR-GLOBALLY-UNIQUE-BUCKET-NAME"
 dynamodb_table_name = "YOUR-LOCK-TABLE-NAME"
 EOF
@@ -298,7 +298,7 @@ curl $(terraform output -raw application_url)/health
 ```json
 {
   "status": "running",
-  "app": "multitier-infra",
+  "app": "orderly-infra",
   "environment": "dev",
   "instance": {
     "id": "i-0abc123def456",
@@ -436,35 +436,35 @@ This eliminates:
 ```bash
 # Check VPC
 aws ec2 describe-vpcs \
-  --filters "Name=tag:Project,Values=multitier-infra" \
+  --filters "Name=tag:Project,Values=orderly-infra" \
   --query "Vpcs[].{ID:VpcId,CIDR:CidrBlock}" --output table
 
 # Check subnets
 aws ec2 describe-subnets \
-  --filters "Name=tag:Project,Values=multitier-infra" \
+  --filters "Name=tag:Project,Values=orderly-infra" \
   --query "Subnets[].{Name:Tags[?Key=='Name']|[0].Value,AZ:AvailabilityZone,CIDR:CidrBlock}" \
   --output table
 
 # Check ALB
 aws elbv2 describe-load-balancers \
-  --query "LoadBalancers[?contains(LoadBalancerName,'multitier-infra')].{Name:LoadBalancerName,DNS:DNSName,State:State.Code}" \
+  --query "LoadBalancers[?contains(LoadBalancerName,'orderly-infra')].{Name:LoadBalancerName,DNS:DNSName,State:State.Code}" \
   --output table
 
 # Check EC2 instances
 aws ec2 describe-instances \
-  --filters "Name=tag:Project,Values=multitier-infra" "Name=instance-state-name,Values=running" \
+  --filters "Name=tag:Project,Values=orderly-infra" "Name=instance-state-name,Values=running" \
   --query "Reservations[].Instances[].{ID:InstanceId,Type:InstanceType,AZ:Placement.AvailabilityZone,State:State.Name}" \
   --output table
 
 # Check RDS
 aws rds describe-db-instances \
-  --query "DBInstances[?contains(DBInstanceIdentifier,'multitier-infra')].{ID:DBInstanceIdentifier,Status:DBInstanceStatus,MultiAZ:MultiAZ,Class:DBInstanceClass}" \
+  --query "DBInstances[?contains(DBInstanceIdentifier,'orderly-infra')].{ID:DBInstanceIdentifier,Status:DBInstanceStatus,MultiAZ:MultiAZ,Class:DBInstanceClass}" \
   --output table
 
 # Check target health
 aws elbv2 describe-target-health \
   --target-group-arn $(aws elbv2 describe-target-groups \
-    --query "TargetGroups[?contains(TargetGroupName,'multitier-infra')].TargetGroupArn" \
+    --query "TargetGroups[?contains(TargetGroupName,'orderly-infra')].TargetGroupArn" \
     --output text) \
   --query "TargetHealthDescriptions[].{Target:Target.Id,Health:TargetHealth.State}" \
   --output table

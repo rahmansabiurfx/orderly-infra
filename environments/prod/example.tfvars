@@ -1,9 +1,8 @@
 # environments/prod/example.tfvars
 # Copy to terraform.tfvars and fill in with actual values.
-# NOTE: No db_password — it is now auto-generated and stored in Secrets Manager.
 
 aws_region   = "us-east-1"
-project_name = "multitier-infra"
+project_name = "orderly-infra"
 environment  = "prod"
 
 vpc_cidr           = "10.1.0.0/16"

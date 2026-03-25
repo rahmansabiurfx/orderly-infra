@@ -9,7 +9,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Project name used in all resource names"
   type        = string
-  default     = "multitier-infra"
+  default     = "orderly-infra"
 }
 
 variable "environment" {
